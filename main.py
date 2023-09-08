@@ -5,11 +5,6 @@ import numpy as np
 import random
 import torch
 
-if "ipykernel" in sys.modules:
-    from tqdm.autonotebook import tqdm
-else:
-    from tqdm import tqdm
-
 from torch.utils.data import Subset
 from sklearn.mixture import GaussianMixture
 import torch.nn as nn
@@ -99,7 +94,7 @@ if __name__ == '__main__':
     
     # ------------------------------- first stage training -------------------------------
 
-    for iteration in tqdm(range(args.iteration1)):
+    for iteration in range(args.iteration1):
 
           if iteration == args.joining_round[0]:
 
@@ -136,7 +131,7 @@ if __name__ == '__main__':
                     mu_list = np.append(mu_list,0)
 
           prob = [1 / args.num_users] * args.num_users 
-          for _ in tqdm(range(int(round(1/args.frac1, 0)))):
+          for _ in range(int(round(1/args.frac1, 0))):
               idxs_users = np.random.choice(range(args.num_users), int(np.round(args.num_users*args.frac1,0)), p=prob)
               w_locals = []
               for idx in idxs_users:
