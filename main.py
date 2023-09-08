@@ -43,7 +43,6 @@ if __name__ == '__main__':
     # ---------------------------Separate new clients---------------------------
 
     dict_users, new_users = separate_users(args, dict_users)
-    print(dict_users.keys(), new_users.keys())
 
     # ---------------------------Add Noise---------------------------
 
