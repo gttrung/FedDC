@@ -1,10 +1,14 @@
-
+import sys
 import os
 import copy
 import numpy as np
 import random
 import torch
-from tqdm import tqdm
+
+if "ipykernel" in sys.modules:
+    from tqdm.notebook import tqdm
+else:
+    from tqdm import tqdm
 
 from torch.utils.data import Subset
 from sklearn.mixture import GaussianMixture
@@ -124,11 +128,11 @@ if __name__ == '__main__':
 
           if num_user_old < num_user_new:
               if args.method == 'loss_thresh':
-                while len(mu_list) <= args.num_new_users*args.stage_ratio :
+                while len(mu_list) < args.num_users :
                     mu_list = np.append(mu_list,0.8)
 
               else:
-                while len(mu_list) <= args.num_new_users*args.stage_ratio :
+                while len(mu_list) < args.num_users :
                     mu_list = np.append(mu_list,0)
 
           prob = [1 / args.num_users] * args.num_users 
