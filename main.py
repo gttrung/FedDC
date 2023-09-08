@@ -6,7 +6,7 @@ import random
 import torch
 
 if "ipykernel" in sys.modules:
-    from tqdm.notebook import tqdm
+    import tqdm.notebook as tqdm
 else:
     from tqdm import tqdm
 
