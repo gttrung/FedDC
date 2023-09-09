@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 import copy
-import torch
 
 
 def FedAvg(w, dict_len):

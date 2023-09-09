@@ -91,7 +91,6 @@ if __name__ == '__main__':
     LID_accumulative_client = np.zeros(args.num_users)
 
     best_acc = 0.0
-    
     # ------------------------------- first stage training -------------------------------
 
     for iteration in range(args.iteration1):
