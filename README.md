@@ -1,6 +1,6 @@
 # FedDC
 
-## 1.Parameters
+## 1. Parameters
 
 **1.1. Descriptions**
 
@@ -31,7 +31,7 @@ For the old FedCorr parameters we set them largely the same as the FedCorr exper
 | `stage_ratio`        | 0.5     | 0.5      |
 | `num_users`          | 90      | 45       |
 
-## Quick start
+## 2. Quick start
 + To train on CIFAR-10 with IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.4,0.6)$, over 90 clients and 10 new clients with 0.5 `stage_ratio`:
 
 ```
