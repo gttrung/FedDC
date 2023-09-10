@@ -15,7 +15,7 @@ In addition to the old FedCorr parameters used in FedDC, we add a few new parame
 | `joining_round`      | iteration/round of joining new clients in stage 1 and 2                                        |
 | `lr_cyclic`          | whether to use cyclic learning rate                                                            |
 | `dynamic`            | whether to include dynamic clients                                                             |
-| `method`             | methods to detect new noisy client: losh_thresh for our method, no_method fo original FedCorr  |
+| `method`             | methods to detect new noisy client: losh_thresh for our method, no_method for original FedCorr |
 
 **1.2. Values**
 
