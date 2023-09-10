@@ -4,6 +4,7 @@ import copy
 import numpy as np
 import random
 import torch
+import pandas as pd
 
 from torch.utils.data import Subset
 from sklearn.mixture import GaussianMixture
