@@ -16,7 +16,7 @@ def args_parser():
     parser.add_argument('--num_users', type=int, default=100, help="number of uses: K")
     parser.add_argument('--local_bs', type=int, default=10, help="local batch size: B")
     parser.add_argument('--lr', type=float, default=0.03, help="learning rate")
-    parser.add_argument('--lr_min', type=float, default=0.001, help="minimum learning rate")
+    parser.add_argument('--lr_min', type=float, default=0.001, help="minimum learning rate for cyclic lr")
     parser.add_argument('--momentum', type=float, default=0.5, help="SGD momentum, default 0.5")
     parser.add_argument('--beta', type=float, default=5, help="coefficient for local proximal, 0 for fedavg, 1 for fedprox, 5 for noise fl")
 
@@ -41,7 +41,7 @@ def args_parser():
     parser.add_argument('--dynamic', action='store_false', help="whether to include dynamic clients")
     parser.add_argument('--fine_tuning', action='store_false', help="whether to include fine-tuning stage")
     parser.add_argument('--correction', action='store_false', help="whether to correct noisy labels")
-    parser.add_argument('--method', type=str, default='loss_thresh', help="methods to detect new noisy client: losh_thresh, no_method")
+    parser.add_argument('--method', type=str, default='loss_thresh', help="methods to detect new noisy client: losh_thresh for our method, no_method for original FedCorr")
 
     # other arguments
     # parser.add_argument('--server', type=str, default='none', help="type of server")
