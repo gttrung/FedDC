@@ -4,7 +4,7 @@
 
 **1.1. Descriptions**
 
-In addition to the old FedCorr parameters used in FedDC, we add a few new parameters to FedDC.
+In addition to the FedCorr parameters that are used in FedDC, we add some new parameters to FedDC.
 
 | new parameters       | description                                                                                    |
 |----------------------|------------------------------------------------------------------------------------------------|
