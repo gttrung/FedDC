@@ -19,7 +19,7 @@ In addition to the FedCorr parameters that are used in FedDC, we add some new pa
 
 **1.2. Values**
 
-For the old FedCorr parameters we set them largely the same as the FedCorr experiments on CIFAR10 and CIFAR100. The only old parameter changed is `local_ep` and the new parameters and their values are listed below.
+For the old FedCorr parameters we set them largely the same as the FedCorr experiments on CIFAR10 and CIFAR100. The only old parameter changed is `local_ep` and the new parameters with their values are listed below.
 
 | parameters           | CIFAR10 | CIFAR100 |
 |----------------------|---------|----------|
