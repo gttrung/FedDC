@@ -363,14 +363,15 @@ if __name__ == '__main__':
 
                 y_train_noisy_new[sample_idx[relabel_idx]] = y_predicted[relabel_idx]
                 dataset_train.targets = y_train_noisy_new
-
-    d_loss = {'loss': loss_list}
-    df_loss = pd.DataFrame(d_loss)
-    df_loss.to_csv(rootpath + 'loss_s2.txt')
-
-    d_acc = {'acc': acc_s2_list}
-    df_acc = pd.DataFrame(d_acc)
-    df_acc.to_csv(rootpath + 'acc_s2.txt')
+                
+        d_loss = {'loss': loss_list}
+        df_loss = pd.DataFrame(d_loss)
+        df_loss.to_csv(rootpath + 'loss_s2.txt')
+    
+        d_acc = {'acc': acc_s2_list}
+        df_acc = pd.DataFrame(d_acc)
+        df_acc.to_csv(rootpath + 'acc_s2.txt')
+    
 
     # # ---------------------------- third stage training -------------------------------
     # # third stage hyper-parameter initialization
