@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     # client_base = np.random.randint(0, args.num_users, size=2).astype(int)
     # client_new = np.random.randint(args.num_users, args.num_users + args.num_new_users, size=2).astype(int)
-    client_base = np.array([30,49]
+    client_base = np.array([30,49])
     client_new = np.array([83,90])
     print(client_base, client_new)
 
