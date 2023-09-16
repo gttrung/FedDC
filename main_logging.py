@@ -55,12 +55,13 @@ if __name__ == '__main__':
     num_user_old = num_user_new = args.num_users
     dataset_train.targets = y_train_noisy
 
-    rootpath = './result/'
+    settings = f'{args.dataset}_{args.method}_{args.num_new_users}_{args.level_n_new_system}'
+    rootpath = f'./results/{settings}/'
     if not os.path.exists(rootpath):
           os.makedirs(rootpath)
-    txtpath = rootpath + '%s_%s_%s_NL_%.1f_LB_%.1f_Iter_%d_Rnd_%d_%d_ep_%d_Frac_%.3f_%.2f_LR_%.3f_ReR_%.1f_ConT_%.1f_ClT_%.1f_Beta_%.1f_Seed_%d'\
-        %(args.method, args.dataset, args.model, args.level_n_system, args.level_n_lowerb, args.iteration1, args.rounds1,
-        args.rounds2, args.local_ep, args.frac1, args.frac2, args.lr, args.relabel_ratio,
+    txtpath = rootpath + '%s_NEW_%d_%s_%s_NL_%.1f_NNL_%.1f_LB_%.1f_Iter_%d_Rnd_%d_%d_ep_%d_Frac_%.3f_%.2f_LR_%.3f_LRM_%.4f_ReR_%.1f_ConT_%.1f_ClT_%.1f_Beta_%.1f_Seed_%d'\
+        %(args.method, args.num_new_users, args.dataset, args.model, args.level_n_system, args.level_n_new_system, args.level_n_lowerb, args.iteration1, args.rounds1,
+        args.rounds2, args.local_ep, args.frac1, args.frac2, args.lr, args.lr_min, args.relabel_ratio,
         args.confidence_thres, args.clean_set_thres, args.beta, args.seed)
 
     if args.iid:
@@ -89,8 +90,10 @@ if __name__ == '__main__':
     client_n_index = np.where(gamma_s > 0)[0]
     criterion = nn.CrossEntropyLoss(reduction='none')
 
-    client_base = np.random.randint(0, args.num_users, size=2).astype(int)
-    client_new = np.random.randint(args.num_users, args.num_users + args.num_new_users, size=2).astype(int)
+    # client_base = np.random.randint(0, args.num_users, size=2).astype(int)
+    # client_new = np.random.randint(args.num_users, args.num_users + args.num_new_users, size=2).astype(int)
+    client_base = np.array([30,49]
+    client_new = np.array([83,90])
     print(client_base, client_new)
 
     LID_accumulative_client = np.zeros(args.num_users)
@@ -188,6 +191,7 @@ if __name__ == '__main__':
                             
                             num_user_old += 1
                             if loss_local >= loss_thresh:
+                                print(f'client {idx}: noisy')
                                 LID_accumulative_client[idx] = np.mean(LID_accumulative_old)
                             else:
                                 LID_accumulative_client[idx] = np.min(LID_accumulative_old)
@@ -327,6 +331,7 @@ if __name__ == '__main__':
                     # reset beta for other clients
                     args.beta = 0
                     if loss_local >= loss_thresh:
+                        print(f'client {idx}: noisy')
                         noisy_set = np.append(noisy_set, idx)
                         prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
                         prob[idx] = 0
@@ -373,30 +378,40 @@ if __name__ == '__main__':
         df_acc.to_csv(rootpath + 'acc_s2.txt')
     
 
-    # # ---------------------------- third stage training -------------------------------
-    # # third stage hyper-parameter initialization
-    # m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
-    # prob = [1/args.num_users for i in range(args.num_users)]
+    # ---------------------------- third stage training -------------------------------
+    # third stage hyper-parameter initialization
+    acc_s3_list = []
+    m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
+    prob = [1/args.num_users for i in range(args.num_users)]
 
-    # for rnd in range(args.rounds2):
-    #     w_locals, loss_locals = [], []
-    #     idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
-    #     for idx in idxs_users:  # training over the subset
-    #         local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
-    #         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
-    #                                                     w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
-    #         w_locals.append(copy.deepcopy(w_local))  # store every updated model
-    #         loss_locals.append(copy.deepcopy(loss_local))
+    for rnd in range(args.rounds2):
+        w_locals, loss_locals = [], []
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
+        for idx in idxs_users:  # training over the subset
+            local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
+            w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
+                                                        w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
+            w_locals.append(copy.deepcopy(w_local))  # store every updated model
+            loss_locals.append(copy.deepcopy(loss_local))
 
 
-    #     dict_len = [len(dict_users[idx]) for idx in idxs_users]
-    #     w_glob_fl = FedAvg(w_locals, dict_len)
-    #     netglob.load_state_dict(copy.deepcopy(w_glob_fl))
+        dict_len = [len(dict_users[idx]) for idx in idxs_users]
+        w_glob_fl = FedAvg(w_locals, dict_len)
+        netglob.load_state_dict(copy.deepcopy(w_glob_fl))
 
-    #     acc_s3 = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
-    #     if best_acc < acc_s3:
-    #         best_acc = acc_s3
-    #     f_log.write("third stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s3, best_acc))
-    #     f_log.flush()
+        acc_s3 = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
+        acc_s3_list.append(acc_s3)
+        if best_acc < acc_s3:
+            best_acc = acc_s3
+        f_log.write("third stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s3, best_acc))
+        f_log.flush()
+
+    d_loss = {'loss': loss_list}
+    df_loss = pd.DataFrame(d_loss)
+    df_loss.to_csv(rootpath + 'loss_s3.txt')
+
+    d_acc = {'acc': acc_s3_list}
+    df_acc = pd.DataFrame(d_acc)
+    df_acc.to_csv(rootpath + 'acc_s3.txt')
 
     torch.cuda.empty_cache()
