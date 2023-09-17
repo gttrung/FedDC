@@ -322,21 +322,25 @@ if __name__ == '__main__':
             for idx in idxs_users:  # training over the subset
 
                 local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
-                if num_user_old < num_user_new and idx in new_clients:
+                if args.method == 'loss_thresh':
+					if num_user_old < num_user_new and idx in new_clients:
 
-                    num_user_old += 1
-                    args.beta = 5
-                    w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
-                                                                w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
-                    # reset beta for other clients
-                    args.beta = 0
-                    if loss_local >= loss_thresh:
-                        print(f'client {idx}: noisy')
-                        noisy_set = np.append(noisy_set, idx)
-                        prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
-                        prob[idx] = 0
-                        idxs_users = np.setdiff1d(idxs_users, idx)
-                        continue
+						num_user_old += 1
+						args.beta = 5
+						w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
+																	w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
+						# reset beta for other clients
+						args.beta = 0
+						if loss_local >= loss_thresh:
+							print(f'client {idx}: noisy')
+							noisy_set = np.append(noisy_set, idx)
+							prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
+							prob[idx] = 0
+							idxs_users = np.setdiff1d(idxs_users, idx)
+							continue
+					else:
+						w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
+                                                                w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 else:
                     w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
