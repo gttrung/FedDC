@@ -132,7 +132,7 @@ if __name__ == '__main__':
           if iteration == args.joining_round[0]:
 
             new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*args.stage_ratio).astype(int)
-            dict_users = merge_users(dict_users, num_new_users=len(new_clients))
+            dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
             args.num_users += len(new_clients)
             num_user_new = args.num_users
             args.frac1 = 1/args.num_users
@@ -341,7 +341,7 @@ if __name__ == '__main__':
             if rnd == args.joining_round[1]:
 
               new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*(1 - args.stage_ratio)).astype(int)
-              dict_users = merge_users(dict_users, num_new_users=len(new_clients))
+              dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
               args.num_users += len(new_clients)
               num_user_new = args.num_users
 
@@ -367,7 +367,7 @@ if __name__ == '__main__':
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                             w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
                         # reset beta for other clients
-			loss_list.append(loss_local)
+                        loss_list.append(loss_local)
                         args.beta = 0
                         if loss_local >= loss_thresh:
                             print(f'client {idx}: noisy')
@@ -381,8 +381,10 @@ if __name__ == '__main__':
                     else:
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
+                        loss_list.append(loss_local)
                 else:
                     w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,                                                                              w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
+                    loss_list.append(loss_local)
                 w_locals.append(copy.deepcopy(w_local))  # store updated model
                 loss_locals.append(copy.deepcopy(loss_local))
             
@@ -435,7 +437,7 @@ if __name__ == '__main__':
                                                         w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
             w_locals.append(copy.deepcopy(w_local))  # store every updated model
             loss_locals.append(copy.deepcopy(loss_local))
-	    loss_list.append(loss_local)
+            loss_list.append(loss_local)
 
         dict_len = [len(dict_users[idx]) for idx in idxs_users]
         w_glob_fl = FedAvg(w_locals, dict_len)
