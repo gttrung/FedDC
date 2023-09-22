@@ -30,6 +30,7 @@ def add_noise(args, y_train, dict_users, new_users):
     gamma_c_initial = (1 - args.level_n_lowerb) * gamma_c_initial + args.level_n_lowerb
     gamma_c = gamma_s * gamma_c_initial
     y_train_noisy = copy.deepcopy(y_train)
+    real_noise_level = np.zeros(args.num_users)
 
     for i in np.where(gamma_c > 0)[0]:
         if i not in list(new_users.keys()):
@@ -39,12 +40,12 @@ def add_noise(args, y_train, dict_users, new_users):
         prob = np.random.rand(len(sample_idx))
         noisy_idx = np.where(prob <= gamma_c[i])[0]
         y_train_noisy[sample_idx[noisy_idx]] = np.random.randint(0, 10, len(noisy_idx))
-        noise_ratio = np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
+        real_noise_level[i] += np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
         if i < args.num_users - args.num_new_users:
-            print("Client %d, init noise level: %.4f (%.4f) ,real noise ratio: %.4f" % (i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
+            print("Client %d, init noise level: %.4f (%.4f) ,real noise ratio: %.4f" % (i, gamma_c[i], gamma_c[i] * 0.9, real_noise_level[i]))
         else:
-            print("New client %d, init noise level: %.4f (%.4f) ,real noise ratio: %.4f" % (i, gamma_c[i], gamma_c[i] * 0.9, noise_ratio))
-    return y_train_noisy, gamma_s
+            print("New client %d, init noise level: %.4f (%.4f) ,real noise ratio: %.4f" % (i, gamma_c[i], gamma_c[i] * 0.9, real_noise_level[i]))
+    return y_train_noisy, gamma_s, real_noise_level
 
 def get_output(loader, net, args, latent=False, criterion=None):
     net.eval()
