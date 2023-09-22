@@ -17,7 +17,7 @@ def separate_users(args, dict_users):
     else:
       return dict_users, {}
 
-def merge_users(dict_users, num_new_users):
+def merge_users(dict_users, num_new_users, new_users):
     
     for _ in range(num_new_users):
           
