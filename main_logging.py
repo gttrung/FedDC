@@ -48,7 +48,8 @@ if __name__ == '__main__':
 
     y_train = np.array(dataset_train.targets)
     y_train_clean = y_train.copy()
-    y_train_noisy, gamma_s = add_noise(args, y_train, dict_users, new_users)
+    y_train_noisy, gamma_s, real_noise_level = add_noise(args, y_train, dict_users, new_users)
+    
 
     args.num_users = args.num_users - args.num_new_users
     args.frac1 = 1/args.num_users
@@ -56,6 +57,10 @@ if __name__ == '__main__':
     dataset_train.targets = y_train_noisy
 
     settings = f'{args.dataset}_{args.method}_{args.num_new_users}_{args.level_n_new_system}'
+    if args.iid:
+        settings += '_iid'
+    else:
+        settings += '_noniid'
     rootpath = f'./results/{settings}/'
     if not os.path.exists(rootpath):
           os.makedirs(rootpath)
@@ -76,6 +81,9 @@ if __name__ == '__main__':
         txtpath += "_Mix_%.1f" % (args.alpha)
 
     f_log = open(txtpath + '_acc.txt', 'a')
+    d_rnl = {'rnl':list(real_noise_level)}
+    df_rnl = pd.DataFrame(d_rnl)
+    df_rnl.to_csv(rootpath+'real_noise_level.txt')
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
@@ -116,11 +124,15 @@ if __name__ == '__main__':
             os.makedirs(rootpath+'data_features/'+path+'/')
           if not os.path.exists(rootpath+ 'data_features/'+path+'/t_sne/'):
             os.makedirs(rootpath+ 'data_features/'+path+'/t_sne/')
+          if not os.path.exists(rootpath  + 'lid_accumulative/'):
+                os.makedirs(rootpath  + 'lid_accumulative/')
+          if not os.path.exists(rootpath +   'lid_current/'):
+                os.makedirs(rootpath  + 'lid_current/')
 
           if iteration == args.joining_round[0]:
 
             new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*args.stage_ratio).astype(int)
-            dict_users = merge_users(dict_users, new_users, args, stage = 1)
+            dict_users = merge_users(dict_users, num_new_users=len(new_clients))
             args.num_users += len(new_clients)
             num_user_new = args.num_users
             args.frac1 = 1/args.num_users
@@ -279,6 +291,13 @@ if __name__ == '__main__':
                   y_train_noisy_new = np.array(dataset_train.targets)
                   y_train_noisy_new[sample_idx[relabel_idx]] = np.argmax(local_output, axis=1)[relabel_idx]
                   dataset_train.targets = y_train_noisy_new
+          d_lid = {'lid_current': LID_client}
+          df_lid = pd.DataFrame(d_lid)
+          df_lid.to_csv(rootpath + '/lid_current/' + f'{path}.txt')
+          d_lid_a = {'lid_accumulative': LID_accumulative_client}
+          df_lid_a = pd.DataFrame(d_lid_a)
+          df_lid_a.to_csv(rootpath + '/lid_accumulative/' + f'{path}.txt')
+
     d_loss = {'loss': loss_list}
     df_loss = pd.DataFrame(d_loss)
     df_loss.to_csv(rootpath + 'loss_s1.txt')
@@ -286,6 +305,20 @@ if __name__ == '__main__':
     d_acc = {'acc': acc_list}
     df_acc = pd.DataFrame(d_acc)
     df_acc.to_csv(rootpath + 'acc_s1.txt')
+    
+    d_mu = {'mu': list(estimated_noisy_level)}
+    df_mu = pd.DataFrame(d_mu)
+    df_mu.to_csv(rootpath + 'mu_s1.txt')
+    
+    y_train_current = np.array(dataset_train.targets)
+    real_noise_level_s1 = np.zeros(args.num_users)
+    for idx in range(args.num_users):
+        sample_idx = np.array(list(dict_users[idx]))
+        real_noise_level_s1[idx] += np.mean(y_train_clean[sample_idx] != y_train_current[sample_idx])
+        
+    d_rnls1 = {'rnl': list(real_noise_level_s1)}
+    df_rnl_s1 = pd.DataFrame(d_rnls1)
+    df_rnl_s1.to_csv(rootpath + 'real_noise_level_s1.txt')
 
     # reset the beta
     args.beta = 0
@@ -308,7 +341,7 @@ if __name__ == '__main__':
             if rnd == args.joining_round[1]:
 
               new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*(1 - args.stage_ratio)).astype(int)
-              dict_users = merge_users(dict_users, new_users, args, stage = 2)
+              dict_users = merge_users(dict_users, num_new_users=len(new_clients))
               args.num_users += len(new_clients)
               num_user_new = args.num_users
 
@@ -317,9 +350,13 @@ if __name__ == '__main__':
               m = min(m, len(selected_clean_idx))
               prob[prob!=0] = 1 / (len(np.where(prob!=0)[0])  + len(new_clients))
               prob[new_clients] = 1 / (len(np.where(prob!=0)[0])  + len(new_clients))
-
-            idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
-
+              if len(new_clients) > 0:
+                  idxs_users = new_clients
+              else:
+                  idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
+            else:
+                idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
+            
             for idx in idxs_users:  # training over the subset
 
                 local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
@@ -330,6 +367,7 @@ if __name__ == '__main__':
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                             w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
                         # reset beta for other clients
+			loss_list.append(loss_local)
                         args.beta = 0
                         if loss_local >= loss_thresh:
                             print(f'client {idx}: noisy')
@@ -338,15 +376,15 @@ if __name__ == '__main__':
                             prob[idx] = 0
                             idxs_users = np.setdiff1d(idxs_users, idx)
                             continue
+                        else:
+                            print(f'client {idx}: clean')
                     else:
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 else:
-                    w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
-								   w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
+                    w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,                                                                              w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 w_locals.append(copy.deepcopy(w_local))  # store updated model
                 loss_locals.append(copy.deepcopy(loss_local))
-                loss_list.append(loss_local)
             
             dict_len = [len(dict_users[idx]) for idx in idxs_users]
             w_glob_fl = FedAvg(w_locals, dict_len)
@@ -356,7 +394,7 @@ if __name__ == '__main__':
             acc_s2_list.append(acc_s2)
             if best_acc < acc_s2:
                 best_acc = acc_s2
-            f_log.write("fine tuning stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s2, best_acc))
+            f_log.write("fine tuning stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s2, best_acc))
             f_log.flush()
 
         if args.correction:
@@ -397,7 +435,7 @@ if __name__ == '__main__':
                                                         w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
             w_locals.append(copy.deepcopy(w_local))  # store every updated model
             loss_locals.append(copy.deepcopy(loss_local))
-
+	    loss_list.append(loss_local)
 
         dict_len = [len(dict_users[idx]) for idx in idxs_users]
         w_glob_fl = FedAvg(w_locals, dict_len)
@@ -407,7 +445,7 @@ if __name__ == '__main__':
         acc_s3_list.append(acc_s3)
         if best_acc < acc_s3:
             best_acc = acc_s3
-        f_log.write("third stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s3, best_acc))
+        f_log.write("third stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s3, best_acc))
         f_log.flush()
 
     d_loss = {'loss': loss_list}
