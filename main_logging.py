@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
           if iteration == args.joining_round[0]:
 
-            new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*args.stage_ratio).astype(int)
+            new_clients = np.arange(args.num_users, args.num_users + int(args.num_new_users*args.stage_ratio)).astype(int)
             dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
             args.num_users += len(new_clients)
             num_user_new = args.num_users
@@ -340,12 +340,12 @@ if __name__ == '__main__':
 
             if rnd == args.joining_round[1]:
 
-              new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*(1 - args.stage_ratio)).astype(int)
+              new_clients = np.arange(args.num_users, args.num_users + args.num_new_users - int(args.num_new_users*args.stage_ratio)).astype(int)
               dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
               args.num_users += len(new_clients)
               num_user_new = args.num_users
 
-              prob = np.append(prob, np.zeros(int(args.num_new_users*(1-args.stage_ratio))))
+              prob = np.append(prob, np.zeros_like(new_clients))
               m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
               m = min(m, len(selected_clean_idx))
               prob[prob!=0] = 1 / (len(np.where(prob!=0)[0])  + len(new_clients))
