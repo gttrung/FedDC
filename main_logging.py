@@ -374,8 +374,6 @@ if __name__ == '__main__':
                             noisy_set = np.append(noisy_set, idx)
                             prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
                             prob[idx] = 0
-                            idxs_users = np.setdiff1d(idxs_users, idx)
-                            continue
                         else:
                             print(f'client {idx}: clean')
                     else:
