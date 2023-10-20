@@ -291,12 +291,9 @@ if __name__ == '__main__':
                         loss_list.append(loss_local)
                         args.beta = 0
                         if loss_local >= loss_thresh:
-                            print(f'client {idx}: noisy')
                             noisy_set = np.append(noisy_set, idx)
                             prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
                             prob[idx] = 0
-                        else:
-                            print(f'client {idx}: clean')
                     else:
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
