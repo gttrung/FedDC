@@ -25,7 +25,6 @@ For the old FedCorr parameters we set them largely the same as the FedCorr exper
 |----------------------|---------|----------|
 | `local_ep`           | 6       | 6        |
 | `lr_min`             | 0.001   | 0.001    |
-| `level_n_new_system` | 0.6     | 0.6      |
 | `num_new_users`      | 10      | 5        |
 | `joining_round`      | 3, 498  | 8, 448   |
 | `stage_ratio`        | 0.5     | 0.5      |
