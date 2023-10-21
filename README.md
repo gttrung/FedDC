@@ -34,17 +34,24 @@ For the old FedCorr parameters we set them largely the same as the FedCorr exper
 + To train on CIFAR-10 with IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.5,0.6)$, over 90 clients and 10 new clients with 0.5 `stage_ratio`:
 
 ```
+python main.py --dataset cifar10 --model resnet18 --level_n_system 0.6 --level_n_lowerb 0.5 --level_n_new_system 0.6 --iteration1 5 --rounds1 500 --rounds2 450 --seed 1 --mixup --lr 0.03 --lr_min 0.001 --beta 5 --num_users 100 --num_new_users 10 --joining_round 3 498 --stage_ratio 0.5
 
 ```
 + To train on CIFAR-10 with Non-IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.5,0.6)$, over 90 clients and 10 new clients with 0.5 `stage_ratio`:
 
 ```
+python main.py --dataset cifar10 --iid --model resnet18 --level_n_system 0.6 --level_n_lowerb 0.5 --level_n_new_system 0.6 --iteration1 5 --rounds1 500 --rounds2 450 --seed 1 --mixup --lr 0.03 --lr_min 0.001 --beta 5 --num_users 100 --num_new_users 10 --joining_round 3 498 --stage_ratio 0.5
 
 ```
 
 + To train on CIFAR-100 with IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.5,0.6)$, over 45 clients and 5 new clients with 0.5 `stage_ratio`:
 
 ```
+python main.py --dataset cifar100 --model resnet34 --level_n_system 0.6 --level_n_lowerb 0.5 --level_n_new_system 0.6 --iteration1 10 --rounds1 150 --rounds2 450 --seed 1 --mixup --lr 0.01 --lr_min 0.001 --beta 5 --num_users 50 --num_new_users 5 --joining_round 8 448 --stage_ratio 0.5
+```
++ To train on CIFAR-100 with Non-IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.5,0.6)$, over 45 clients and 5 new clients with 0.5 `stage_ratio`:
 
+```
+python main.py --dataset cifar100 --iid --model resnet34 --level_n_system 0.6 --level_n_lowerb 0.5 --level_n_new_system 0.6 --iteration1 10 --rounds1 150 --rounds2 450 --seed 1 --mixup --lr 0.01 --lr_min 0.001 --beta 5 --num_users 50 --num_new_users 5 --joining_round 8 448 --stage_ratio 0.5
 ```
 
