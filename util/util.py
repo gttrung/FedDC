@@ -39,7 +39,7 @@ def add_noise(args, y_train, dict_users, new_users):
             sample_idx = np.array(list(new_users[i]))
         prob = np.random.rand(len(sample_idx))
         noisy_idx = np.where(prob <= gamma_c[i])[0]
-        y_train_noisy[sample_idx[noisy_idx]] = np.random.randint(0, 10, len(noisy_idx))
+        y_train_noisy[sample_idx[noisy_idx]] = np.random.randint(0, args.num_classes, len(noisy_idx))
         real_noise_level[i] += np.mean(y_train[sample_idx] != y_train_noisy[sample_idx])
         if i < args.num_users - args.num_new_users:
             print("Client %d, init noise level: %.4f (%.4f) ,real noise ratio: %.4f" % (i, gamma_c[i], gamma_c[i] * 0.9, real_noise_level[i]))
