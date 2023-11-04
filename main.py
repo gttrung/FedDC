@@ -161,8 +161,6 @@ if __name__ == '__main__':
                     w_locals.append(copy.deepcopy(w))
 
                     acc = globaltest(copy.deepcopy(net_local).to(args.device), dataset_test, args)
-                    acc_list.append(acc)
-                    loss_list.append(loss_local)
 
                     if best_acc < acc:
                         best_acc = acc
@@ -252,7 +250,6 @@ if __name__ == '__main__':
         m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
         m = min(m, len(selected_clean_idx))
         netglob = copy.deepcopy(netglob)
-        acc_s2_list = []
 
         # add fl training
         for rnd in range(args.rounds1):
@@ -288,7 +285,6 @@ if __name__ == '__main__':
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                             w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
                         # reset beta for other clients
-                        loss_list.append(loss_local)
                         args.beta = 0
                         if loss_local >= loss_thresh:
                             noisy_set = np.append(noisy_set, idx)
@@ -297,10 +293,9 @@ if __name__ == '__main__':
                     else:
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
-                        loss_list.append(loss_local)
                 else:
-                    w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,                                                                              w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
-                    loss_list.append(loss_local)
+                    w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
+                                                               w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 w_locals.append(copy.deepcopy(w_local))  # store updated model
                 loss_locals.append(copy.deepcopy(loss_local))
             
@@ -309,7 +304,6 @@ if __name__ == '__main__':
             netglob.load_state_dict(copy.deepcopy(w_glob_fl))
 
             acc_s2  = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
-            acc_s2_list.append(acc_s2)
             if best_acc < acc_s2:
                 best_acc = acc_s2
             f_log.write("fine tuning stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s2, best_acc))
@@ -345,14 +339,12 @@ if __name__ == '__main__':
                                                         w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
             w_locals.append(copy.deepcopy(w_local))  # store every updated model
             loss_locals.append(copy.deepcopy(loss_local))
-            loss_list.append(loss_local)
 
         dict_len = [len(dict_users[idx]) for idx in idxs_users]
         w_glob_fl = FedAvg(w_locals, dict_len)
         netglob.load_state_dict(copy.deepcopy(w_glob_fl))
 
         acc_s3 = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
-        acc_s3_list.append(acc_s3)
         if best_acc < acc_s3:
             best_acc = acc_s3
         f_log.write("third stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s3, best_acc))
