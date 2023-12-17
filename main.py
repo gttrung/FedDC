@@ -48,8 +48,7 @@ if __name__ == '__main__':
 
     y_train = np.array(dataset_train.targets)
     y_train_clean = y_train.copy()
-    y_train_noisy, gamma_s, real_noise_level = add_noise(args, y_train, dict_users, new_users)
-    
+    y_train_noisy, gamma_s = add_noise(args, y_train, dict_users, new_users)
 
     args.num_users = args.num_users - args.num_new_users
     args.frac1 = 1/args.num_users
@@ -57,10 +56,6 @@ if __name__ == '__main__':
     dataset_train.targets = y_train_noisy
 
     settings = f'{args.dataset}_{args.method}_{args.num_new_users}_{args.level_n_new_system}'
-    if args.iid:
-        settings += '_iid'
-    else:
-        settings += '_noniid'
     rootpath = f'./results/{settings}/'
     if not os.path.exists(rootpath):
           os.makedirs(rootpath)
@@ -94,19 +89,15 @@ if __name__ == '__main__':
     client_p_index = np.where(gamma_s == 0)[0]
     client_n_index = np.where(gamma_s > 0)[0]
     criterion = nn.CrossEntropyLoss(reduction='none')
-
     LID_accumulative_client = np.zeros(args.num_users)
-
     best_acc = 0.0
-
     # ------------------------------- first stage training -------------------------------
 
     for iteration in range(args.iteration1):
-
+        
           if iteration == args.joining_round[0]:
-
-            new_clients = np.arange(args.num_users, args.num_users + int(args.num_new_users*args.stage_ratio)).astype(int)
-            dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
+            new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*args.stage_ratio).astype(int)
+            dict_users = merge_users(dict_users, new_users, args, stage = 1)
             args.num_users += len(new_clients)
             num_user_new = args.num_users
             args.frac1 = 1/args.num_users
@@ -132,7 +123,6 @@ if __name__ == '__main__':
               if args.method == 'loss_thresh':
                 while len(mu_list) < args.num_users :
                     mu_list = np.append(mu_list,0.8)
-
               else:
                 while len(mu_list) < args.num_users :
                     mu_list = np.append(mu_list,0)
@@ -172,7 +162,6 @@ if __name__ == '__main__':
                           loss_thresh += loss_local
                         if num_user_old < num_user_new:
                           if idx in new_clients:
-                            
                             num_user_old += 1
                             if loss_local >= loss_thresh:
                                 LID_accumulative_client[idx] = np.mean(LID_accumulative_old)
@@ -258,23 +247,19 @@ if __name__ == '__main__':
 
             if rnd == args.joining_round[1]:
 
-              new_clients = np.arange(args.num_users, args.num_users + args.num_new_users - int(args.num_new_users*args.stage_ratio)).astype(int)
-              dict_users = merge_users(dict_users, num_new_users=len(new_clients), new_users = new_users)
+              new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*(1 - args.stage_ratio)).astype(int)
+              dict_users = merge_users(dict_users, new_users, args, stage = 2)
               args.num_users += len(new_clients)
               num_user_new = args.num_users
 
-              prob = np.append(prob, np.zeros_like(new_clients))
+              prob = np.append(prob, np.zeros(int(args.num_new_users*(1-args.stage_ratio))))
               m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
               m = min(m, len(selected_clean_idx))
               prob[prob!=0] = 1 / (len(np.where(prob!=0)[0])  + len(new_clients))
               prob[new_clients] = 1 / (len(np.where(prob!=0)[0])  + len(new_clients))
-              if len(new_clients) > 0:
-                  idxs_users = new_clients
-              else:
-                  idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
-            else:
-                idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
-            
+
+            idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
+
             for idx in idxs_users:  # training over the subset
 
                 local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
@@ -290,12 +275,14 @@ if __name__ == '__main__':
                             noisy_set = np.append(noisy_set, idx)
                             prob[prob!=0] = 1 / (len(np.where(prob!=0)[0]) - 1)
                             prob[idx] = 0
+                            idxs_users = np.setdiff1d(idxs_users, idx)
+                            continue
                     else:
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                                 w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 else:
                     w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
-                                                               w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
+								   w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 w_locals.append(copy.deepcopy(w_local))  # store updated model
                 loss_locals.append(copy.deepcopy(loss_local))
             
@@ -306,7 +293,7 @@ if __name__ == '__main__':
             acc_s2  = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
             if best_acc < acc_s2:
                 best_acc = acc_s2
-            f_log.write("fine tuning stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s2, best_acc))
+            f_log.write("fine tuning stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s2, best_acc))
             f_log.flush()
 
         if args.correction:
@@ -322,11 +309,9 @@ if __name__ == '__main__':
 
                 y_train_noisy_new[sample_idx[relabel_idx]] = y_predicted[relabel_idx]
                 dataset_train.targets = y_train_noisy_new
-    
-
+                
     # ---------------------------- third stage training -------------------------------
     # third stage hyper-parameter initialization
-    acc_s3_list = []
     m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
     prob = [1/args.num_users for i in range(args.num_users)]
 
@@ -340,6 +325,7 @@ if __name__ == '__main__':
             w_locals.append(copy.deepcopy(w_local))  # store every updated model
             loss_locals.append(copy.deepcopy(loss_local))
 
+
         dict_len = [len(dict_users[idx]) for idx in idxs_users]
         w_glob_fl = FedAvg(w_locals, dict_len)
         netglob.load_state_dict(copy.deepcopy(w_glob_fl))
@@ -347,7 +333,7 @@ if __name__ == '__main__':
         acc_s3 = globaltest(copy.deepcopy(netglob).to(args.device), dataset_test, args)
         if best_acc < acc_s3:
             best_acc = acc_s3
-        f_log.write("third stage round %d - clients: %s, test acc: %.4f, best acc: %.4f \n" % (rnd, idxs_users, acc_s3, best_acc))
+        f_log.write("third stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s3, best_acc))
         f_log.flush()
-
+        
     torch.cuda.empty_cache()
