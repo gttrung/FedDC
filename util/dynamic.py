@@ -3,7 +3,9 @@
 
 def separate_users(args, dict_users):
     
+    if args.dynamic:
       new_users = {}
+
       for _ in range(args.num_new_users):
             
             position = len(dict_users)
@@ -11,9 +13,18 @@ def separate_users(args, dict_users):
             new_users[position-1] = data
 
       return dict_users, new_users
-
-def merge_users(dict_users, num_new_users, new_users):
     
+    else:
+      args.num_new_users = 0
+      return dict_users, {}
+
+def merge_users(dict_users, new_users, args, stage = 1):
+    
+    if stage == 1:
+        num_new_users = int(args.num_new_users*args.stage_ratio)
+    elif stage == 2:
+        num_new_users = int(args.num_new_users*(1-args.stage_ratio))
+                            
     for _ in range(num_new_users):
           
           position = len(dict_users)

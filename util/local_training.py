@@ -65,8 +65,9 @@ class LocalUpdate(object):
 
         epoch_loss = []
         for iter in range(epoch):
+            # based on cyclic learning rate foluma in O2U-Net paper
             if self.args.lr_cyclic:
-                scale = iter / (epoch-1)
+                scale = (iter % (epoch//2)) / float(epoch//2)
                 adjust_lr = (1 - scale) * self.args.lr + scale * self.args.lr_min
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = adjust_lr

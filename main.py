@@ -4,7 +4,6 @@ import copy
 import numpy as np
 import random
 import torch
-import pandas as pd
 
 from torch.utils.data import Subset
 from sklearn.mixture import GaussianMixture
@@ -18,6 +17,8 @@ from util.util import add_noise, lid_term, get_output
 from util.dataset import get_dataset
 from model.build_model import build_model
 
+from tqdm import tqdm
+
 np.seterr(invalid='ignore')
 np.set_printoptions(threshold=np.inf)
 """
@@ -27,7 +28,6 @@ Major framework of noise FL
 if __name__ == '__main__':
     # parse args
     args = args_parser()
-    print(args)
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     y_train = np.array(dataset_train.targets)
     y_train_clean = y_train.copy()
-    y_train_noisy, gamma_s = add_noise(args, y_train, dict_users, new_users)
+    y_train_noisy, gamma_s, rnl = add_noise(args, y_train, dict_users, new_users)
 
     args.num_users = args.num_users - args.num_new_users
     args.frac1 = 1/args.num_users
@@ -89,12 +89,17 @@ if __name__ == '__main__':
     client_p_index = np.where(gamma_s == 0)[0]
     client_n_index = np.where(gamma_s > 0)[0]
     criterion = nn.CrossEntropyLoss(reduction='none')
+
     LID_accumulative_client = np.zeros(args.num_users)
     best_acc = 0.0
-    # ------------------------------- first stage training -------------------------------
+    
+    dict_args = vars(args)
+    for key, value in dict_args.items():
+        print(f'{key}: {value}')
 
-    for iteration in range(args.iteration1):
-        
+    # ------------------------------- first stage training -------------------------------
+    for iteration in tqdm(range(args.iteration1)):
+          
           if iteration == args.joining_round[0]:
             new_clients = np.arange(args.num_users, args.num_users + args.num_new_users*args.stage_ratio).astype(int)
             dict_users = merge_users(dict_users, new_users, args, stage = 1)
@@ -151,7 +156,6 @@ if __name__ == '__main__':
                     w_locals.append(copy.deepcopy(w))
 
                     acc = globaltest(copy.deepcopy(net_local).to(args.device), dataset_test, args)
-
                     if best_acc < acc:
                         best_acc = acc
 
@@ -162,13 +166,14 @@ if __name__ == '__main__':
                           loss_thresh += loss_local
                         if num_user_old < num_user_new:
                           if idx in new_clients:
+                            
                             num_user_old += 1
                             if loss_local >= loss_thresh:
                                 LID_accumulative_client[idx] = np.mean(LID_accumulative_old)
                             else:
                                 LID_accumulative_client[idx] = np.min(LID_accumulative_old)
 
-                    f_log.write("iteration %d, epoch %d, client %d, loss: %.4f, acc: %.4f ,best_acc: %.4f\n" % (iteration, _, idx, loss_local, acc, best_acc))
+                    f_log.write("iteration %d, round %d, client %d, loss: %.4f, acc: %.4f ,best_acc: %.4f\n" % (iteration, _, idx, loss_local, acc, best_acc))
                     f_log.flush()
 
                     LID_local = list(lid_term(local_output, local_output))
@@ -241,7 +246,7 @@ if __name__ == '__main__':
         netglob = copy.deepcopy(netglob)
 
         # add fl training
-        for rnd in range(args.rounds1):
+        for rnd in tqdm(range(args.rounds1)):
 
             w_locals, loss_locals = [], []
 
@@ -269,7 +274,7 @@ if __name__ == '__main__':
                         args.beta = 5
                         w_local, loss_local = local.update_weights(net=copy.deepcopy(netglob).to(args.device), seed=args.seed,
                                             w_g=netglob.to(args.device), epoch=args.local_ep, mu=0.8)
-                        # reset beta for other clients
+                        # reset beta for other existing clients
                         args.beta = 0
                         if loss_local >= loss_thresh:
                             noisy_set = np.append(noisy_set, idx)
@@ -285,7 +290,7 @@ if __name__ == '__main__':
 								   w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
                 w_locals.append(copy.deepcopy(w_local))  # store updated model
                 loss_locals.append(copy.deepcopy(loss_local))
-            
+                    
             dict_len = [len(dict_users[idx]) for idx in idxs_users]
             w_glob_fl = FedAvg(w_locals, dict_len)
             netglob.load_state_dict(copy.deepcopy(w_glob_fl))
@@ -309,13 +314,13 @@ if __name__ == '__main__':
 
                 y_train_noisy_new[sample_idx[relabel_idx]] = y_predicted[relabel_idx]
                 dataset_train.targets = y_train_noisy_new
-                
+
     # ---------------------------- third stage training -------------------------------
     # third stage hyper-parameter initialization
     m = max(int(args.frac2 * args.num_users), 1)  # num_select_clients
     prob = [1/args.num_users for i in range(args.num_users)]
 
-    for rnd in range(args.rounds2):
+    for rnd in tqdm(range(args.rounds2)):
         w_locals, loss_locals = [], []
         idxs_users = np.random.choice(range(args.num_users), m, replace=False, p=prob)
         for idx in idxs_users:  # training over the subset
@@ -324,7 +329,6 @@ if __name__ == '__main__':
                                                         w_g=netglob.to(args.device), epoch=args.local_ep, mu=0)
             w_locals.append(copy.deepcopy(w_local))  # store every updated model
             loss_locals.append(copy.deepcopy(loss_local))
-
 
         dict_len = [len(dict_users[idx]) for idx in idxs_users]
         w_glob_fl = FedAvg(w_locals, dict_len)
@@ -335,5 +339,5 @@ if __name__ == '__main__':
             best_acc = acc_s3
         f_log.write("third stage round %d, test acc: %.4f, best acc: %.4f \n" % (rnd, acc_s3, best_acc))
         f_log.flush()
-        
+
     torch.cuda.empty_cache()
