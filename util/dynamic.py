@@ -3,7 +3,7 @@
 
 def separate_users(args, dict_users):
     
-    if args.dynamic:
+    if args.num_new_users != 0:
       new_users = {}
 
       for _ in range(args.num_new_users):
@@ -15,7 +15,6 @@ def separate_users(args, dict_users):
       return dict_users, new_users
     
     else:
-      args.num_new_users = 0
       return dict_users, {}
 
 def merge_users(dict_users, new_users, args, stage = 1):

@@ -37,10 +37,9 @@ def args_parser():
     parser.add_argument('--clean_set_thres', type=float, default=0.1, help="threshold of estimated noise level to filter 'clean' set used in fine-tuning stage")
 
     # ablation study
-    parser.add_argument('--lr_cyclic', action='store_false', help="whether to use cyclic learning rate")
-    parser.add_argument('--dynamic', action='store_false', help="whether to include dynamic clients")
-    parser.add_argument('--fine_tuning', action='store_false', help="whether to include fine-tuning stage")
-    parser.add_argument('--correction', action='store_false', help="whether to correct noisy labels")
+    parser.add_argument('--lr_cyclic', action='store_true', help="whether to use cyclic learning rate")
+    parser.add_argument('--fine_tuning', action='store_true', help="whether to include fine-tuning stage")
+    parser.add_argument('--correction', action='store_true', help="whether to correct noisy labels")
     parser.add_argument('--method', type=str, default='loss_thresh', help="methods to detect new noisy client: losh_thresh for our method, no_method for original FedCorr")
 
     # other arguments
