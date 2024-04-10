@@ -59,9 +59,9 @@ if __name__ == '__main__':
     rootpath = f'./results/{settings}/'
     if not os.path.exists(rootpath):
           os.makedirs(rootpath)
-    txtpath = rootpath + '%s_NEW_%d_%s_%s_NL_%.1f_NNL_%.1f_LB_%.1f_Iter_%d_Rnd_%d_%d_ep_%d_Frac_%.3f_%.2f_LR_%.3f_LRM_%.4f_ReR_%.1f_ConT_%.1f_ClT_%.1f_Beta_%.1f_Seed_%d'\
+    txtpath = rootpath + '%s_NEW_%d_%s_%s_NL_%.1f_NNL_%.1f_LB_%.1f_Iter_%d_Rnd_%d_%d_ep_%d_Frac_%.3f_%.2f_LR_%.3f_ReR_%.1f_ConT_%.1f_ClT_%.1f_Beta_%.1f_Seed_%d'\
         %(args.method, args.num_new_users, args.dataset, args.model, args.level_n_system, args.level_n_new_system, args.level_n_lowerb, args.iteration1, args.rounds1,
-        args.rounds2, args.local_ep, args.frac1, args.frac2, args.lr, args.lr_min, args.relabel_ratio,
+        args.rounds2, args.local_ep, args.frac1, args.frac2, args.lr, args.relabel_ratio,
         args.confidence_thres, args.clean_set_thres, args.beta, args.seed)
 
     if args.iid:
@@ -74,6 +74,8 @@ if __name__ == '__main__':
         txtpath += "_CORR"
     if args.mixup:
         txtpath += "_Mix_%.1f" % (args.alpha)
+    if args.lr_cyclic:
+        txtpath += "_LRM_%.4f" % (args.lr_min)
 
     f_log = open(txtpath + '_acc.txt', 'a')
 
