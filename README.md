@@ -31,8 +31,8 @@ In addition to the FedCorr parameters that are used in FedDC, we add some new pa
 |----------------------|------------------------------------------------------------------------------------------------|
 | `lr_min`             | minimum learning rate for lr cyclic                                                            |
 | `level_n_new_system` | fraction of new noisy clients ($\sigma$ in paper)                                              |
-| `num_new_users`      | number of new clients clients                                                                  |
-| `stage_ratio`        | ratio of new clients per stage in stage 1 and 2                                                |
+| `num_new_users`      | number of new clients                                                                          |
+| `stage_ratio`        | ratio of new clients per stage in the 1st and 2nd stage                                        |
 | `joining_round`      | iteration/round of joining new clients in stage 1 and 2                                        |
 | `lr_cyclic`          | whether to use cyclic learning rate                                                            |
 | `dynamic`            | whether to include dynamic clients                                                             |
