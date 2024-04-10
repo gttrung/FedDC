@@ -42,13 +42,13 @@ In addition to the FedCorr parameters that are used in FedDC, we add some new pa
 
 For the old FedCorr parameters we set them largely the same as the FedCorr experiments on CIFAR10 and CIFAR100. The only old parameter changed is `local_ep` and the new parameters with their values are listed below.
 
-| parameters           | CIFAR10 | CIFAR100 |
-|----------------------|---------|----------|
-| `local_ep`           | 6       | 6        |
-| `lr_min`             | 0.001   | 0.001    |
-| `num_new_users`      | 10      | 5        |
-| `joining_round`      | 3, 498  | 8, 448   |
-| `stage_ratio`        | 0.5     | 0.5      |
+| parameters           | CIFAR10 | CIFAR100 | CIFAR100 |
+|----------------------|---------|----------|----------|
+| `local_ep`           | 6       | 6        | 6        |
+| `lr_min`             | 0.003   | 0.001    | 0.0001   |
+| `num_new_users`      | 10      | 5        | 50       |
+| `joining_round`      | 3, 498  | 8, 448   | 2, 48    |
+| `stage_ratio`        | 0.5     | 0.5      | 0.5      |
 
 ## 3. Getting Started
 + To train on CIFAR-10 with IID data partition and noise setting $(\rho,\tau,\sigma)=(0.6,0.5,0.6)$, over 90 clients and 10 new clients with 0.5 `stage_ratio`:
