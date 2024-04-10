@@ -5,7 +5,7 @@
 Create a virtual environment with conda and install the required packages.
 
 ```
-conda create -n python=3.10.12 feddc pip
+conda create -n feddc python=3.10.12 pip
 conda activate feddc
 pip3 install -r requirements.txt
 ```
