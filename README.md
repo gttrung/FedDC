@@ -18,7 +18,7 @@ Or you can run it in a Docker container with some prerequisites below:
 Then build docker and run the image
 ```
 docker build -f Dockerfile -t feddc:exp .
-docker run --ipc=host --gpus 1 -ti feddc:exp # with 1 GPU
+docker run --gpus 1 -ti feddc:exp # with 1 GPU
 ```
 
 ## 2. Parameters
