@@ -15,10 +15,10 @@ Or you can run it in a Docker container with some prerequisites below:
 2. **Nvidia-Docker**: Allows Docker to interact with your local GPU. Installation instructions are available on the [Nvidia-Docker repository](https://github.com/NVIDIA/nvidia-container-toolkit).<br/>
 3. **Docker Engine**: Download and installation instructions can be found on the [Docker website](https://docs.docker.com/install/). <br/>
 
-Then build docker and run the image
+Then build docker and run the image with `--gpus 1` stands for using 1 GPU
 ```
 docker build -f Dockerfile -t feddc:exp .
-docker run --gpus 1 -ti feddc:exp # with 1 GPU
+docker run --gpus 1 -ti feddc:exp
 ```
 
 ## 2. Parameters
