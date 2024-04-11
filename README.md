@@ -35,7 +35,6 @@ In addition to the FedCorr parameters that are used in FedDC, we add some new pa
 | `stage_ratio`        | ratio of new clients per stage in the 1st and 2nd stage                                        |
 | `joining_round`      | iteration/round of joining new clients in stage 1 and 2                                        |
 | `lr_cyclic`          | whether to use cyclic learning rate                                                            |
-| `dynamic`            | whether to include dynamic clients                                                             |
 | `method`             | methods to detect new noisy client: losh_thresh for our method, no_method for original FedCorr |
 
 **2.2. Values**
