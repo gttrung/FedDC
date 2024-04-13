@@ -1,6 +1,6 @@
 # python version 3.7.1
 # -*- coding: utf-8 -*-
-
+import numpy as np
 def separate_users(args, dict_users):
     
     if args.num_new_users != 0:
